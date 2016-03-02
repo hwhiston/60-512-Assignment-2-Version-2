@@ -40,6 +40,7 @@ Partial Class Form1
         Me.txtChat.Multiline = True
         Me.txtChat.Name = "txtChat"
         Me.txtChat.ReadOnly = True
+        Me.txtChat.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
         Me.txtChat.Size = New System.Drawing.Size(243, 161)
         Me.txtChat.TabIndex = 0
         '
