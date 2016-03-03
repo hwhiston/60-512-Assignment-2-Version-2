@@ -5,8 +5,11 @@ Imports System.Net
 
 Public Class Form1
 
+    Private process As UserProcess
+    Private holdBackQueue As ArrayList
+    Private vectorClock As ArrayList
     Dim rand As Integer
-    Dim Listener As TcpListener
+    Dim Listener As TcpListenerEx
     Dim Client As New TcpClient
     Dim Client2 As New TcpClient
 
@@ -19,6 +22,12 @@ Public Class Form1
 
         txtChat.Text = txtChat.Text & "Server Started" & vbNewLine
         txtChat.Text = txtChat.Text & "Attempting connections..." & vbNewLine
+
+        vectorClock = New ArrayList
+        holdBackQueue = New ArrayList
+        vectorClock.Add(0)
+        vectorClock.Add(0)
+        vectorClock.Add(0)
 
         Try
             Client = New TcpClient("10.71.34.1", 8000)
@@ -55,17 +64,25 @@ Public Class Form1
 
         While validPort = False
             Try
-                Listener = New TcpListener(IPAddress.Parse("10.71.34.1"), port)
+                Listener = New TcpListenerEx(IPAddress.Parse("10.71.34.1"), port)
                 Listener.Start()
                 validPort = True
             Catch
                 port = port + 1
             End Try
         End While
+
+        If process Is Nothing Then
+            process = New UserProcess(port Mod 10)
+        End If
+
     End Sub
 
     Private Sub Receiver()
         Dim i As Integer
+        Dim j As Integer
+        Dim k As Integer
+
         While True
             If Client.Connected Then
                 stream(1) = Client.GetStream()
@@ -88,12 +105,24 @@ Public Class Form1
                         ' Read the first batch of the TcpServer response bytes.
                         Dim bytes As Int32 = stream(i).Read(data, 0, data.Length)
                         responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes)
-
-                        If txtChat.InvokeRequired Then
-                            txtChat.Invoke(New AppendTextBoxDelegate(AddressOf AppendTextBox), New Object() {txtChat.Text & "Received: {0}" & responseData & vbNewLine})
-                        Else
-                            txtChat.AppendText(txtChat.Text & "Received: {0}" & responseData & vbNewLine)
-                        End If
+                        For j = 0 To vectorClock.Count - 1
+                            If responseData.Substring(j, 1) = (vectorClock(j) + 1).ToString Then
+                                For k = 0 To vectorClock.Count - 1
+                                    If k <> j And vectorClock(k) >= responseData.Substring(k, 1) Then
+                                        If txtChat.InvokeRequired Then
+                                            txtChat.Invoke(New AppendTextBoxDelegate(AddressOf AppendTextBox), New Object() {txtChat.Text & "[Received:] " & responseData & vbNewLine})
+                                        Else
+                                            txtChat.AppendText(txtChat.Text & "[Received:] " & responseData & vbNewLine)
+                                        End If
+                                        GoTo EndOfFor
+                                    End If
+                                Next
+EndOfFor:
+                                If vectorClock(j) < responseData.Substring(j, 1) Then
+                                    vectorClock(j) = responseData.Substring(j, 1)
+                                End If
+                            End If
+                        Next
 
                         'stream.Flush()
 
@@ -119,26 +148,57 @@ Public Class Form1
 
     Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnSend.Click
         Dim message As String = txtMessage.Text
+        Dim messageToSend As UserMessage
         txtMessage.Text = ""
 
-        ' Translate the passed message into ASCII and store it as a Byte array.
-        data = System.Text.Encoding.ASCII.GetBytes(message)
-
-        ' Get a client stream for reading and writing.
-        '  Stream stream = client.GetStream();
-        stream(1) = Client.GetStream()
-        ' Send the message to the connected TcpServer. 
-        stream(1).Write(data, 0, data.Length)
-        If Client2.Connected Then
-            stream(2) = Client2.GetStream()
-            stream(2).Write(data, 0, data.Length)
+        If message = "" Then
+            Exit Sub
         End If
 
-        txtChat.Text = txtChat.Text & "Sent: {0}" & message & vbNewLine
+        ' Translate the passed message into ASCII and store it as a Byte array.
+        vectorClock(process.PID) = vectorClock(process.PID) + 1
+        data = System.Text.Encoding.ASCII.GetBytes(vectorClock(0) & vectorClock(1) & vectorClock(2) & " " & process.User & " says " & message)
+        messageToSend = New UserMessage(process.User, data, vectorClock)
+
+        If Client.Connected Then
+            ' Get a client stream for reading and writing.
+            '  Stream stream = client.GetStream();
+            If Not stream(1) Is Nothing Then
+                stream(1) = Client.GetStream()
+                ' Send the message to the connected TcpServer. 
+                stream(1).Write(data, 0, data.Length)
+            End If
+        End If
+        If Client2.Connected Then
+            If Not stream(2) Is Nothing Then
+                stream(2) = Client2.GetStream()
+                stream(2).Write(data, 0, data.Length)
+            End If
+        End If
+
+        txtChat.Text = txtChat.Text & "[Sent:] " & message & vbNewLine
 
     End Sub
 
+    Private Function MaxArrayList(vector1 As ArrayList, vector2 As ArrayList) As ArrayList
+        Dim i As Integer
+
+        For Each i In vector1
+            If vector1(i) > vector2(i) Then
+                MaxArrayList = vector1
+                Exit Function
+            End If
+        Next
+
+        MaxArrayList = vector2
+
+    End Function
+
     Private Sub Timer1_Tick(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Timer1.Tick
+        If Not process Is Nothing Then
+            lblUsername.Text = process.User
+        End If
+
         lblPort.Text = port
 
         If Not Listener Is Nothing Then

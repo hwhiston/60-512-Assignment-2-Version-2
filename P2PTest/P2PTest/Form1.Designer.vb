@@ -28,6 +28,7 @@ Partial Class Form1
         Me.btnSend = New System.Windows.Forms.Button()
         Me.lblPort = New System.Windows.Forms.Label()
         Me.txtMessage = New System.Windows.Forms.TextBox()
+        Me.lblUsername = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
         'Timer1
@@ -67,12 +68,21 @@ Partial Class Form1
         Me.txtMessage.Size = New System.Drawing.Size(161, 20)
         Me.txtMessage.TabIndex = 3
         '
+        'lblUsername
+        '
+        Me.lblUsername.AutoSize = True
+        Me.lblUsername.Location = New System.Drawing.Point(13, 214)
+        Me.lblUsername.Name = "lblUsername"
+        Me.lblUsername.Size = New System.Drawing.Size(0, 13)
+        Me.lblUsername.TabIndex = 4
+        '
         'Form1
         '
         Me.AcceptButton = Me.btnSend
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(267, 237)
+        Me.Controls.Add(Me.lblUsername)
         Me.Controls.Add(Me.txtMessage)
         Me.Controls.Add(Me.lblPort)
         Me.Controls.Add(Me.btnSend)
@@ -89,4 +99,5 @@ Partial Class Form1
     Friend WithEvents btnSend As Button
     Friend WithEvents lblPort As Label
     Friend WithEvents txtMessage As TextBox
+    Friend WithEvents lblUsername As Label
 End Class

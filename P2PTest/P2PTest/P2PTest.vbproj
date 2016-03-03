@@ -94,6 +94,10 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="NetworkStreamEx.vb" />
+    <Compile Include="TcpListenerEx.vb" />
+    <Compile Include="UserMessage.vb" />
+    <Compile Include="UserProcess.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form1.resx">
