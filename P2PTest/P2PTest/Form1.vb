@@ -5,6 +5,8 @@ Imports System.Net
 
 Public Class Form1
 
+    Private myHost As String = Dns.GetHostName()
+    Private myIP As String = Dns.GetHostEntry(myHost).AddressList(1).ToString()
     Private process As UserProcess
     Private holdBackQueue As ArrayList
     Private vectorClock As ArrayList
@@ -23,20 +25,22 @@ Public Class Form1
         txtChat.Text = txtChat.Text & "Server Started" & vbNewLine
         txtChat.Text = txtChat.Text & "Attempting connections..." & vbNewLine
 
+        'Create vectorclock
         vectorClock = New ArrayList
         holdBackQueue = New ArrayList
         vectorClock.Add(0)
         vectorClock.Add(0)
         vectorClock.Add(0)
 
+        'Initialize clients and ports using same ip address
         Try
-            Client = New TcpClient("10.71.34.1", 8000)
+            Client = New TcpClient(myIP, 8000)
         Catch
             txtChat.Text = txtChat.Text & "Cannot locate host. Awaiting connections..." & vbNewLine
         End Try
 
         Try
-            Client2 = New TcpClient("10.71.34.1", 8001)
+            Client2 = New TcpClient(myIP, 8001)
         Catch
             txtChat.Text = txtChat.Text & "Cannot locate host. Awaiting connections..." & vbNewLine
         End Try
@@ -49,10 +53,12 @@ Public Class Form1
             txtChat.Text = txtChat.Text & "I have connected as client2" & vbNewLine
         End If
 
+        'Create a listener thread for other clients to connect to
         Dim ListThread As New Thread(New ThreadStart(AddressOf Listening))
         ListThread.IsBackground = True
         ListThread.Start()
 
+        'Create a receiver thread for receiving messages
         Dim ReceiverThread As New Thread(New ThreadStart(AddressOf Receiver))
         ReceiverThread.IsBackground = True
         ReceiverThread.Start()
@@ -62,9 +68,10 @@ Public Class Form1
     Private Sub Listening()
         Dim validPort As Boolean = False
 
+        'Listen for connecting clients and assign a valid port
         While validPort = False
             Try
-                Listener = New TcpListenerEx(IPAddress.Parse("10.71.34.1"), port)
+                Listener = New TcpListenerEx(IPAddress.Parse(myIP), port)
                 Listener.Start()
                 validPort = True
             Catch
@@ -95,31 +102,36 @@ Public Class Form1
             For i = 1 To 2
                 If Not stream(i) Is Nothing Then
                     If stream(i).DataAvailable Then
-                        ' Receive the TcpServer.response.
-                        ' Buffer to store the response bytes.
+                        'Variable to store bytes received
                         data = New [Byte](256) {}
 
-                        ' String to store the response ASCII representation.
-                        Dim responseData As [String] = [String].Empty
+                        'Variable to store string representation
+                        Dim receivedData As [String] = [String].Empty
 
-                        ' Read the first batch of the TcpServer response bytes.
+                        'Read in the received bytes
                         Dim bytes As Int32 = stream(i).Read(data, 0, data.Length)
-                        responseData = System.Text.Encoding.ASCII.GetString(data, 0, bytes)
+                        receivedData = System.Text.Encoding.ASCII.GetString(data, 0, bytes)
+                        'Causal ordering
                         For j = 0 To vectorClock.Count - 1
-                            If responseData.Substring(j, 1) = (vectorClock(j) + 1).ToString Then
+                            'Check if the vectorclock was incremented
+                            If receivedData.Substring(j, 1) = (vectorClock(j) + 1).ToString Then
                                 For k = 0 To vectorClock.Count - 1
-                                    If k <> j And vectorClock(k) >= responseData.Substring(k, 1) Then
+                                    'If the vectorclock of other processes in incremented, we know that there was a change
+                                    If k <> j And vectorClock(k) >= receivedData.Substring(k, 1) Then
                                         If txtChat.InvokeRequired Then
-                                            txtChat.Invoke(New AppendTextBoxDelegate(AddressOf AppendTextBox), New Object() {txtChat.Text & "[Received:] " & responseData & vbNewLine})
+                                            txtChat.Invoke(New AppendTextBoxDelegate(AddressOf AppendTextBox), New Object() {txtChat.Text & "[Received:] " & receivedData & vbNewLine})
                                         Else
-                                            txtChat.AppendText(txtChat.Text & "[Received:] " & responseData & vbNewLine)
+                                            txtChat.AppendText(txtChat.Text & "[Received:] " & receivedData & vbNewLine)
                                         End If
                                         GoTo EndOfFor
+                                    Else
+                                        holdBackQueue.Add(receivedData & vbNewLine)
                                     End If
                                 Next
 EndOfFor:
-                                If vectorClock(j) < responseData.Substring(j, 1) Then
-                                    vectorClock(j) = responseData.Substring(j, 1)
+                                'Set vectorclock to max of current vectorclock or vectorclock received
+                                If vectorClock(j) < receivedData.Substring(j, 1) Then
+                                    vectorClock(j) = receivedData.Substring(j, 1)
                                 End If
                             End If
                         Next
@@ -180,23 +192,13 @@ EndOfFor:
 
     End Sub
 
-    Private Function MaxArrayList(vector1 As ArrayList, vector2 As ArrayList) As ArrayList
-        Dim i As Integer
-
-        For Each i In vector1
-            If vector1(i) > vector2(i) Then
-                MaxArrayList = vector1
-                Exit Function
-            End If
-        Next
-
-        MaxArrayList = vector2
-
-    End Function
-
     Private Sub Timer1_Tick(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Timer1.Tick
-        If Not process Is Nothing Then
+        If process Is Nothing Then
+            lblUsername.Text = "Connecting..."
+            txtMessage.Enabled = False
+        Else
             lblUsername.Text = process.User
+            txtMessage.Enabled = True
         End If
 
         lblPort.Text = port
@@ -228,6 +230,7 @@ EndOfFor:
     End Sub
 
     Private Sub Form1_FormClosing(ByVal sender As Object, ByVal e As System.Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
+        'Stop the listeners and streams
         If Not Listener Is Nothing Then
             Listener.Stop()
             stream(1).Close()

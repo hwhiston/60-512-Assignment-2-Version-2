@@ -51,7 +51,7 @@ Partial Class Form1
         Me.btnSend.Name = "btnSend"
         Me.btnSend.Size = New System.Drawing.Size(75, 23)
         Me.btnSend.TabIndex = 1
-        Me.btnSend.Text = "Button1"
+        Me.btnSend.Text = "Send"
         Me.btnSend.UseVisualStyleBackColor = True
         '
         'lblPort
@@ -88,7 +88,7 @@ Partial Class Form1
         Me.Controls.Add(Me.btnSend)
         Me.Controls.Add(Me.txtChat)
         Me.Name = "Form1"
-        Me.Text = "Form1"
+        Me.Text = "P2P"
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
