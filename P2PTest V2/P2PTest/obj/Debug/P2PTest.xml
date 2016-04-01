@@ -1,0 +1,44 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+P2PTest
+</name>
+</assembly>
+<members>
+<member name="T:P2PTest.My.Resources.Resources">
+<summary>
+  A strongly-typed resource class, for looking up localized strings, etc.
+</summary>
+</member>
+<member name="P:P2PTest.My.Resources.Resources.ResourceManager">
+<summary>
+  Returns the cached ResourceManager instance used by this class.
+</summary>
+</member>
+<member name="P:P2PTest.My.Resources.Resources.Culture">
+<summary>
+  Overrides the current thread's CurrentUICulture property for all
+  resource lookups using this strongly typed resource class.
+</summary>
+</member>
+<member name="M:P2PTest.UserMessage.#ctor(System.String,System.Byte[],System.Collections.ArrayList)">
+ <summary>
+ Create new user message
+ </summary>
+ <param name="user">user who created message</param>
+ <param name="message">message contents</param>
+</member>
+<member name="T:P2PTest.UserProcess">
+ <summary>
+ Class represents a user process to be generated
+ </summary>
+</member>
+<member name="M:P2PTest.UserProcess.#ctor(System.Int32)">
+ <summary>
+ Generate a new user process
+ </summary>
+ <param name="id">id to assign to process</param>
+</member>
+</members>
+</doc>
