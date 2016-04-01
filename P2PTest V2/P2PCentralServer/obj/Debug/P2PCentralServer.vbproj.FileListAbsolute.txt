@@ -8,3 +8,4 @@ C:\Users\Halen\Documents\Visual Studio 2015\Projects\P2PTest V2\P2PCentralServer
 C:\Users\Halen\Documents\Visual Studio 2015\Projects\P2PTest V2\P2PCentralServer\obj\Debug\P2PCentralServer.exe
 C:\Users\Halen\Documents\Visual Studio 2015\Projects\P2PTest V2\P2PCentralServer\obj\Debug\P2PCentralServer.xml
 C:\Users\Halen\Documents\Visual Studio 2015\Projects\P2PTest V2\P2PCentralServer\obj\Debug\P2PCentralServer.pdb
+C:\Users\Halen\Documents\Visual Studio 2015\Projects\P2PTest V2\P2PCentralServer\obj\Debug\P2PCentralServer.vbprojResolveAssemblyReference.cache

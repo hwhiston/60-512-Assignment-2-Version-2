@@ -10,6 +10,7 @@ Public Class frmCentralServer
     Dim port As Integer = 8080
     Dim client1 As TcpClient
     Dim client2 As TcpClient
+    Dim client3 As TcpClient
     Dim Listener As TcpListenerEx
     Private data As [Byte]()
     Dim stream As NetworkStream
@@ -46,7 +47,7 @@ Public Class frmCentralServer
         While True
             ReceiveFromClient(client1)
             ReceiveFromClient(client2)
-
+            ReceiveFromClient(client3)
 
         End While
         'Dim helper As New SocketHelper()
@@ -147,6 +148,11 @@ Public Class frmCentralServer
 
             If client2 Is Nothing Then
                 client2 = Listener.AcceptTcpClient()
+                Listener.Start()
+            End If
+
+            If client3 Is Nothing Then
+                client3 = Listener.AcceptTcpClient()
             End If
         End If
 
